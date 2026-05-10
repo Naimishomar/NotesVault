@@ -13,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-    origin: ["http://localhost:5173"], // Add your frontend URL
+    origin: ["http://localhost:5173", "https://notesbyshreya.vercel.app/"], // Add your frontend URL
     credentials: true,
 }));
 app.use(morgan("dev"));
