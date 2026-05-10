@@ -24,111 +24,115 @@ const LandingPage = () => {
     return (
         <div className="min-h-screen bg-[#FDFDFD] selection:bg-black selection:text-white">
             {/* Hero Section */}
-            <section className="relative min-h-screen flex flex-col pt-[140px] px-6 overflow-hidden">
+            <section className="relative min-h-screen flex flex-col pt-[100px] lg:pt-[140px] px-4 md:px-6 overflow-hidden">
                 <div className="max-w-7xl mx-auto w-full relative">
                     {/* Top Headlines Row */}
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-4 z-50 relative">
+                    <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-12 md:gap-8 mb-4 z-50 relative text-center md:text-left">
                         {/* Top Left Headline */}
                         <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="text-left pt-2"
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="pt-2"
                         >
-                            <h1 className="text-4xl font-bold uppercase text-slate-900">
+                            <h1 className="text-3xl md:text-4xl font-bold uppercase text-slate-900 leading-tight">
                                 Your Daily Ritual <br />
                                 <span className="text-slate-400">Perfectly Crafted</span>
                             </h1>
-                            <p className="text-slate-500 text-[10px] font-medium leading-relaxed mt-4 max-w-[320px] uppercase tracking-wider">
+                            <p className="text-slate-500 text-[10px] font-medium leading-relaxed mt-4 max-w-[320px] uppercase tracking-wider mx-auto md:mx-0">
                                 Elevating academic excellence through precision-crafted knowledge exchanges. Every note is a blueprint for your future success, meticulously curated to ensure clarity, depth, and total mastery over complex subjects.
                             </p>
                         </motion.div>
 
                         {/* Top Right Headline */}
                         <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="text-right pt-2"
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="md:text-right pt-2"
                         >
-                            <h2 className="text-4xl font-bold uppercase text-slate-300">
+                            <h2 className="text-3xl md:text-4xl font-bold uppercase text-slate-300 leading-tight">
                                 The Future of <br />
                                 <span className="text-slate-900">Knowledge Exchange</span>
                             </h2>
-                            <p className="text-slate-500 text-[10px] font-medium leading-relaxed mt-4 max-w-[320px] uppercase tracking-wider ml-auto">
+                            <p className="text-slate-500 text-[10px] font-medium leading-relaxed mt-4 max-w-[320px] uppercase tracking-wider md:ml-auto">
                                 A global ecosystem of shared insights. Join a community of dedicated scholars trading high-fidelity resources in real-time, transforming the way we consume and distribute academic wisdom.
                             </p>
                         </motion.div>
                     </div>
 
-                    {/* Floating Study Icons - Ritual Atmosphere */}
+                    {/* Floating Study Icons - Ritual Atmosphere (Scaled for Mobile) */}
                     <motion.div 
                         animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
                         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute top-1/4 left-[15%] text-slate-100 -z-10"
+                        className="absolute top-1/4 left-[5%] md:left-[15%] text-slate-100 -z-10"
                     >
-                        <BookOpen className="w-24 h-24" />
+                        <BookOpen className="w-16 h-16 md:w-24 md:h-24 opacity-20 md:opacity-100" />
                     </motion.div>
                     <motion.div 
                         animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }}
                         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                        className="absolute bottom-1/4 right-[15%] text-slate-100 -z-10"
+                        className="absolute bottom-1/4 right-[5%] md:right-[15%] text-slate-100 -z-10"
                     >
-                        <Zap className="w-32 h-32" />
+                        <Zap className="w-20 h-20 md:w-32 md:h-32 opacity-20 md:opacity-100" />
                     </motion.div>
+                    
+                    {/* Background Circles (Responsive scale) */}
                     <motion.div 
                         animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.2, 0.1] }}
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-50 -z-20"
                     >
-                        <div className="w-[800px] h-[800px] border border-slate-100 rounded-full flex items-center justify-center">
-                            <div className="w-[600px] h-[600px] border border-slate-100 rounded-full flex items-center justify-center">
-                                <div className="w-[400px] h-[400px] border border-slate-100 rounded-full"></div>
+                        <div className="w-[300px] md:w-[800px] h-[300px] md:h-[800px] border border-slate-100 rounded-full flex items-center justify-center">
+                            <div className="w-[200px] md:w-[600px] h-[200px] md:h-[600px] border border-slate-100 rounded-full flex items-center justify-center">
+                                <div className="w-[100px] md:w-[400px] h-[100px] md:h-[400px] border border-slate-100 rounded-full"></div>
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* Center Image Stack (ANIMATED MASSIVE) */}
-                    <div className="flex-1 relative flex items-center justify-center mt-12 z-10">
-                        <div className="relative w-full h-full flex items-center justify-center">
+                    {/* Center Image Stack (Responsive Animation) */}
+                    <div className="relative mt-12 md:mt-24 mb-12 md:mb-24 flex items-center justify-center min-h-[300px] md:min-h-[500px] lg:min-h-[700px]">
+                        <div className="relative w-full max-w-[300px] md:max-w-none flex items-center justify-center">
+                            {/* Hidden on small mobile to reduce clutter */}
                             <motion.img 
                                 src="https://i.pinimg.com/1200x/f7/d3/88/f7d38819e47f16b144eb775aee1a882c.jpg" 
-                                className="absolute w-[90%] max-h-[65vh] object-contain rounded-3xl -rotate-[20deg]"
-                                animate={{ x: [-40, -224, -40], y: [80, 80, 80] }}
-                                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute w-[80%] md:w-[60%] lg:w-[45%] max-h-[40vh] md:max-h-[65vh] object-contain rounded-3xl -rotate-[20deg] shadow-2xl opacity-0 md:opacity-100"
+                                animate={{ x: [-50, -180, -50], y: [40, 40, 40] }}
+                                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                             />
                             <motion.img 
                                 src="https://i.pinimg.com/736x/e3/03/15/e303150e74e780ea9a8543394ef1a918.jpg" 
-                                className="absolute w-[95%] max-h-[70vh] object-contain rounded-3xl -rotate-12"
-                                animate={{ x: [-20, -160, -20], y: [64, 64, 64] }}
-                                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute w-[85%] md:w-[65%] lg:w-[50%] max-h-[45vh] md:max-h-[70vh] object-contain rounded-3xl -rotate-12 shadow-xl opacity-50 md:opacity-100"
+                                animate={{ x: [-30, -120, -30], y: [20, 20, 20] }}
+                                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                             />
                             <motion.img 
                                 src="https://i.pinimg.com/736x/e2/e5/68/e2e5687b8e2f2bf44aa99823abf2c655.jpg" 
-                                className="absolute w-[90%] max-h-[65vh] object-contain rounded-3xl rotate-[20deg]"
-                                animate={{ x: [40, 224, 40], y: [80, 80, 80] }}
-                                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute w-[80%] md:w-[60%] lg:w-[45%] max-h-[40vh] md:max-h-[65vh] object-contain rounded-3xl rotate-[20deg] shadow-2xl opacity-0 md:opacity-100"
+                                animate={{ x: [50, 180, 50], y: [40, 40, 40] }}
+                                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                             />
                             <motion.img 
                                 src="https://i.pinimg.com/736x/be/8d/38/be8d38a77ae4e297845f721b599de52d.jpg" 
-                                className="absolute w-[95%] max-h-[70vh] object-contain rounded-3xl rotate-12"
-                                animate={{ x: [20, 160, 20], y: [64, 64, 64] }}
-                                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute w-[85%] md:w-[65%] lg:w-[50%] max-h-[45vh] md:max-h-[70vh] object-contain rounded-3xl rotate-12 shadow-xl opacity-50 md:opacity-100"
+                                animate={{ x: [30, 120, 30], y: [20, 20, 20] }}
+                                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                             />
+                            {/* Main Center Image */}
                             <motion.img 
                                 src="https://i.pinimg.com/736x/0b/ce/25/0bce25aaed50981b7e0a51ab4d2b9c47.jpg" 
-                                className="absolute w-[100%] max-h-[85vh] object-contain rounded-[40px] z-20"
-                                animate={{ y: [40, 20, 40] }}
-                                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                                className="relative w-[100%] md:w-[75%] lg:w-[60%] max-h-[50vh] md:max-h-[85vh] object-contain rounded-[24px] md:rounded-[40px] z-20 shadow-2xl border-4 border-white"
+                                animate={{ y: [15, 0, 15] }}
+                                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                             />
                         </div>
                     </div>
 
-                    {/* Bottom Features Row (Static) */}
-                    <div className="flex justify-between items-end mt-20 pb-12 z-50 relative">
+                    {/* Bottom Features Row (Responsive Stack) */}
+                    <div className="flex flex-col md:flex-row justify-between items-center md:items-end mt-12 md:mt-24 pb-12 gap-16 md:gap-0 z-50 relative">
                         {/* Rating Component */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="flex flex-col gap-4"
+                            className="flex flex-col items-center md:items-start gap-4"
                         >
                             <div className="flex -space-x-3">
                                 {[1,2,3,4].map(i => (
@@ -140,9 +144,9 @@ const LandingPage = () => {
                                     50k+
                                 </div>
                             </div>
-                            <div>
+                            <div className="text-center md:text-left">
                                 <p className="text-xl font-bold tracking-tighter text-slate-900 leading-none">Successful Students</p>
-                                <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                                     <div className="flex text-yellow-400">
                                         {[1,2,3,4,5].map(i => <Star key={i} className="w-3 h-3 fill-current" />)}
                                     </div>
@@ -155,13 +159,13 @@ const LandingPage = () => {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="text-right flex flex-col items-end gap-6"
+                            className="text-center md:text-right flex flex-col items-center md:items-end gap-8"
                         >
-                            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 max-w-[200px]">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 max-w-[280px] md:max-w-[200px] leading-relaxed">
                                 Handcrafted Notes Made From Carefully Selected Academic Resources
                             </p>
-                            <Link to="/marketplace" className="group relative inline-flex items-center gap-4 bg-black text-white px-8 py-4 rounded-full overflow-hidden transition-all hover:pr-12">
-                                <span className="relative z-10 font-bold tracking-widest text-xs uppercase">Browse Notes</span>
+                            <Link to="/marketplace" className="group relative inline-flex items-center gap-4 bg-black text-white px-12 py-6 rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl shadow-black/10">
+                                <span className="relative z-10 font-bold tracking-[0.2em] text-xs uppercase">Browse Collections</span>
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
                             </Link>

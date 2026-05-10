@@ -56,25 +56,29 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 relative">
+        <div className="pt-24 lg:pt-32 pb-24 lg:pb-20 px-4 md:px-6 max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 relative">
             {/* Ambient Background Blobs */}
-            <div className="absolute top-20 right-0 w-96 h-96 bg-slate-100 rounded-full blur-[120px] opacity-40 -z-10"></div>
-            <div className="absolute bottom-0 left-40 w-96 h-96 bg-slate-100 rounded-full blur-[120px] opacity-40 -z-10"></div>
+            <div className="absolute top-20 right-0 w-64 md:w-96 h-64 md:h-96 bg-slate-100 rounded-full blur-[80px] md:blur-[120px] opacity-40 -z-10"></div>
+            <div className="absolute bottom-0 left-10 md:left-40 w-64 md:w-96 h-64 md:h-96 bg-slate-100 rounded-full blur-[80px] md:blur-[120px] opacity-40 -z-10"></div>
 
-            {/* Sidebar */}
+            {/* Desktop Sidebar */}
             <motion.aside 
                 initial={{ x: -100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                className="hidden lg:flex flex-col w-72 gap-6"
+                className="hidden lg:flex flex-col w-72 gap-6 sticky top-32 h-fit"
             >
                 <div className="glass p-6 rounded-[32px] flex flex-col gap-3 shadow-2xl shadow-slate-200/50">
                     <div className="flex items-center gap-4 mb-6 px-2">
-                        <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center font-bold text-white text-xl">
-                            {user.name?.charAt(0)}
+                        <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center font-bold text-white text-xl overflow-hidden shadow-lg">
+                            {user.profileImage ? (
+                                <img src={user.profileImage} className="w-full h-full object-cover" alt={user.name} />
+                            ) : (
+                                user.name?.charAt(0)
+                            )}
                         </div>
                         <div>
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active User</p>
-                            <h4 className="font-bold text-slate-800">{user.name}</h4>
+                            <h4 className="font-bold text-slate-800 line-clamp-1">{user.name}</h4>
                             <p className="text-[10px] text-slate-400 font-medium">@{user.username}</p>
                         </div>
                     </div>
@@ -91,34 +95,35 @@ const Dashboard = () => {
             </motion.aside>
 
             {/* Main Content */}
-            <main className="flex-1 space-y-12">
-                <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <main className="flex-1 space-y-8 md:space-y-12">
+                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 text-center sm:text-left">
                     <div>
-                        <h1 className="text-4xl font-bold mb-2">Welcome back, <span className="text-black">{user.name.split(' ')[0]}</span>!</h1>
-                        <p className="text-slate-500 font-medium">Manage your library and access your premium notes.</p>
+                        <h1 className="text-3xl md:text-4xl font-bold mb-2">Welcome back, <span className="text-black">{user.name.split(' ')[0]}</span>!</h1>
+                        <p className="text-slate-500 font-medium text-sm md:text-base">Manage your library and access your premium notes.</p>
                     </div>
                     {user.isAdmin && (
-                        <Link to="/upload" className="btn-primary">
-                            <Plus className="w-4 h-4" /> Upload New Note
+                        <Link to="/upload" className="btn-primary w-full sm:w-fit justify-center py-4">
+                            <Plus className="w-5 h-5" /> Upload New Note
                         </Link>
                     )}
                 </header>
 
                 {/* Profile Overview Card */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="glass-card bg-black text-white border-none p-8 flex flex-col justify-between min-h-[180px]">
-                        <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div className="glass-card bg-black text-white border-none p-6 md:p-8 flex flex-col justify-between min-h-[140px] md:min-h-[180px] overflow-hidden relative group">
+                        <div className="relative z-10">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Profile Email</p>
-                            <h3 className="text-xl font-bold">{user.email}</h3>
+                            <h3 className="text-lg md:text-xl font-bold truncate">{user.email}</h3>
                         </div>
-                        <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span> Account Verified
+                        <div className="flex items-center gap-2 text-slate-400 text-sm font-medium relative z-10">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Account Verified
                         </div>
+                        <Shield className="absolute -right-4 -bottom-4 w-24 h-24 text-white/5 rotate-12" />
                     </div>
-                    <div className="glass-card p-8 flex flex-col justify-between min-h-[180px]">
+                    <div className="glass-card p-6 md:p-8 flex flex-col justify-between min-h-[140px] md:min-h-[180px]">
                         <div>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Total Collections</p>
-                            <h3 className="text-4xl font-bold text-black">{user.purchases?.length || 0}</h3>
+                            <h3 className="text-4xl md:text-5xl font-bold text-black">{user.purchases?.length || 0}</h3>
                         </div>
                         <p className="text-slate-500 text-sm font-medium">Premium notes in your vault</p>
                     </div>
@@ -127,13 +132,13 @@ const Dashboard = () => {
                 {/* Purchased Notes List */}
                 <div className="space-y-6">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                        <h3 className="text-2xl font-bold">My Digital Vault</h3>
-                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        <h3 className="text-xl md:text-2xl font-bold">My Digital Vault</h3>
+                        <div className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">
                             {user.purchases?.length || 0} ITEMS
                         </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-4 md:gap-6">
                         {user.purchases && user.purchases.length > 0 ? (
                             user.purchases.map((purchase: any, i: number) => (
                                 <motion.div 
@@ -141,42 +146,62 @@ const Dashboard = () => {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    whileHover={{ y: -5 }}
-                                    className="glass p-6 rounded-[32px] flex items-center gap-6 group"
+                                    className="glass p-4 md:p-6 rounded-[28px] md:rounded-[32px] flex items-center gap-4 md:gap-6 group relative overflow-hidden"
                                 >
-                                    <div className="w-20 h-24 bg-slate-100 rounded-2xl overflow-hidden shadow-lg group-hover:rotate-3 transition-transform">
+                                    <div className="w-16 h-20 md:w-20 md:h-24 bg-slate-100 rounded-xl md:rounded-2xl overflow-hidden shadow-lg group-hover:scale-105 transition-transform shrink-0">
                                         <img src={purchase.note?.thumbnail} className="w-full h-full object-cover" alt={purchase.note?.title} />
                                     </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-[10px] font-bold text-slate-900 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-full">Verified PDF</span>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1 md:mb-2">
+                                            <span className="text-[8px] md:text-[10px] font-bold text-slate-900 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-full">Verified PDF</span>
                                         </div>
-                                        <h4 className="font-bold text-lg text-slate-800 mb-4 group-hover:text-black transition-colors">{purchase.note?.title}</h4>
+                                        <h4 className="font-bold text-base md:text-lg text-slate-800 mb-2 md:mb-4 truncate">{purchase.note?.title}</h4>
                                         <button 
                                             onClick={() => window.open(purchase.note?.url, '_blank')}
-                                            className="flex items-center gap-2 text-sm font-bold text-black hover:translate-x-1 transition-transform cursor-pointer"
+                                            className="flex items-center gap-2 text-xs md:text-sm font-bold text-black hover:translate-x-1 transition-transform cursor-pointer"
                                         >
-                                            <Download className="w-4 h-4" /> Download Note
+                                            <Download className="w-3 h-3 md:w-4 md:h-4" /> Download Note
                                         </button>
                                     </div>
                                 </motion.div>
                             ))
                         ) : (
-                            <div className="col-span-full glass p-20 text-center rounded-[40px]">
-                                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <BookOpen className="w-10 h-10 text-slate-300" />
+                            <div className="col-span-full glass p-10 md:p-20 text-center rounded-[32px] md:rounded-[40px]">
+                                <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <BookOpen className="w-8 h-8 md:w-10 md:h-10 text-slate-300" />
                                 </div>
-                                <h3 className="text-xl font-bold mb-2">Your vault is empty</h3>
-                                <p className="text-slate-500 max-w-xs mx-auto mb-8">Notes you purchase from the marketplace will appear here.</p>
-                                <Link to="/marketplace" className="btn-primary mx-auto w-fit">Explore Marketplace</Link>
+                                <h3 className="text-lg md:text-xl font-bold mb-2">Your vault is empty</h3>
+                                <p className="text-slate-500 text-sm max-w-xs mx-auto mb-8">Notes you purchase from the marketplace will appear here.</p>
+                                <Link to="/marketplace" className="btn-primary mx-auto w-fit px-8 py-4">Explore Marketplace</Link>
                             </div>
                         )}
                     </div>
                 </div>
             </main>
+
+            {/* Mobile Bottom Navigation */}
+            <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-md glass bg-white/80 backdrop-blur-xl border border-slate-100 shadow-2xl rounded-full p-2 flex items-center justify-around z-50">
+                <Link to="/dashboard" className="flex flex-col items-center gap-1 p-3 rounded-full text-black bg-slate-50 shadow-inner">
+                    <LayoutDashboard className="w-6 h-6" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest">Home</span>
+                </Link>
+                <Link to="/profile" className="flex flex-col items-center gap-1 p-3 text-slate-400">
+                    <Settings className="w-6 h-6" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest">Profile</span>
+                </Link>
+                {user.isAdmin && (
+                    <Link to="/upload" className="flex flex-col items-center gap-1 p-3 text-slate-400">
+                        <Plus className="w-6 h-6" />
+                        <span className="text-[8px] font-bold uppercase tracking-widest">Upload</span>
+                    </Link>
+                )}
+                <button onClick={logout} className="flex flex-col items-center gap-1 p-3 text-red-400">
+                    <LogOut className="w-6 h-6" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest">Exit</span>
+                </button>
+            </div>
         </div>
     );
-
 };
 
 const SidebarLink = ({ icon: Icon, label, to, active = false }: any) => (
