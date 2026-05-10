@@ -8,8 +8,6 @@ import {
     BookOpen, 
     LayoutDashboard, 
     Loader2, 
-    ArrowLeft,
-    ExternalLink,
     Eye
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';

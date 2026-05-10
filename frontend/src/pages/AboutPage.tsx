@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
-import { BookOpen, Zap, Shield, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { BookOpen, Zap, Shield } from 'lucide-react';
 
 const AboutPage = () => {
     return (

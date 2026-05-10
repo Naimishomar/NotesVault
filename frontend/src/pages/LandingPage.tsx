@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 
-const LandingPage = () => {
+const LandingPage = () => {  
     const [notes, setNotes] = useState<any[]>([]);
 
     useEffect(() => {
@@ -239,7 +239,7 @@ const LandingPage = () => {
 
                     {notes.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {notes.map((note, i) => (
+                            {notes.map((note) => (
                                 <Link to={`/note/${note._id}`} key={note._id}>
                                     <motion.div whileHover={{ y: -10 }} className="group cursor-pointer">
                                         <div className="aspect-[4/5] rounded-[32px] overflow-hidden mb-6 relative shadow-2xl">

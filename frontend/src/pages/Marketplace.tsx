@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, SlidersHorizontal, Book, Download, Star, ExternalLink, ChevronDown } from 'lucide-react';
+import { Search, Book, Star} from 'lucide-react';
 import api from '../api/axios';
 import { Link } from 'react-router-dom';
-
+ 
 const Marketplace = () => {
     const [notes, setNotes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);

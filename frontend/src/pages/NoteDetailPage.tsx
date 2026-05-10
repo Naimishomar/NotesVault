@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { 
     Download, 
     FileText, 
-    CheckCircle2, 
     ArrowLeft,
     ShoppingBag,
     ShieldCheck,
