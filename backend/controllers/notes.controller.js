@@ -1,10 +1,38 @@
 import Notes from "../models/notes.model.js";
-import { uploadToR2, deleteFromR2 } from "../utils/r2.js";
+import { uploadToR2, deleteFromR2, generatePresignedUrl } from "../utils/r2.js";
+
+export const generatePresignedUrlController = async (req, res) => {
+    try {
+        const { fileName, fileType } = req.body;
+        if (!fileName || !fileType) {
+            return res.status(400).json({ message: "File name and type are required", success: false });
+        }
+
+        const uniqueFileName = `${Date.now()}-${fileName}`;
+        const result = await generatePresignedUrl(uniqueFileName, fileType);
+        
+        if (!result.success) {
+            return res.status(500).json({ message: "Failed to generate presigned URL", success: false });
+        }
+
+        res.status(200).json({
+            success: true,
+            uploadUrl: result.url,
+            fileUrl: process.env.CLOUDFLARE_R2_PUBLIC_URL 
+                ? `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${uniqueFileName}`
+                : `${process.env.CLOUDFLARE_R2_ENDPOINT}/${process.env.CLOUDFLARE_R2_BUCKET_NAME}/${uniqueFileName}`,
+            fileKey: result.key
+        });
+    } catch (error) {
+        console.error("Presigned URL Controller Error:", error.message);
+        res.status(500).json({ message: "Internal server error", success: false });
+    }
+};
 
 export const uploadNote = async (req, res) => {
     try {
         console.log("Upload Request Body:", req.body);
-        const { title, description, price, totalPages, subject } = req.body;
+        const { title, description, price, totalPages, subject, pdfUrl, pdfKey, thumbnailUrl, thumbnailKey } = req.body;
         const pdfFile = req.files?.pdf?.[0];
         const thumbnailFile = req.files?.thumbnail?.[0];
 
@@ -14,52 +42,48 @@ export const uploadNote = async (req, res) => {
             processedSubject = [subject];
         }
 
-        if (!pdfFile) {
-            return res.status(400).json({ message: "Please upload a PDF file", success: false });
-        }
-
-        if (!thumbnailFile) {
-            return res.status(400).json({ message: "Please upload a thumbnail image", success: false });
-        }
-
         if (!title || !description || !price || !totalPages || !processedSubject || processedSubject.length === 0) {
-            return res.status(400).json({ message: "Please provide all details (title, description, price, totalPages, subject)", success: false });
+            return res.status(400).json({ message: "Please provide all details", success: false });
         }
 
-        // Upload PDF to Cloudflare R2
-        const pdfUploadResult = await uploadToR2(pdfFile);
-        if (!pdfUploadResult.success) {
-            return res.status(500).json({ message: "Failed to upload PDF to R2", success: false });
+        let finalPdfUrl = pdfUrl;
+        let finalPdfKey = pdfKey;
+        let finalThumbnailUrl = thumbnailUrl;
+        let finalThumbnailKey = thumbnailKey;
+
+        // Handle Legacy File Upload if direct URLs aren't provided
+        if (!finalPdfUrl && pdfFile) {
+            const pdfUploadResult = await uploadToR2(pdfFile);
+            if (!pdfUploadResult.success) return res.status(500).json({ message: "PDF upload failed", success: false });
+            finalPdfUrl = pdfUploadResult.url;
+            finalPdfKey = pdfUploadResult.key;
         }
 
-        // Upload Thumbnail to Cloudflare R2
-        const thumbnailUploadResult = await uploadToR2(thumbnailFile);
-        if (!thumbnailUploadResult.success) {
-            // Cleanup: delete uploaded PDF if thumbnail fails
-            await deleteFromR2(pdfUploadResult.key);
-            return res.status(500).json({ message: "Failed to upload thumbnail to R2", success: false });
+        if (!finalThumbnailUrl && thumbnailFile) {
+            const thumbnailUploadResult = await uploadToR2(thumbnailFile);
+            if (!thumbnailUploadResult.success) return res.status(500).json({ message: "Thumbnail upload failed", success: false });
+            finalThumbnailUrl = thumbnailUploadResult.url;
+            finalThumbnailKey = thumbnailUploadResult.key;
         }
 
-        // Save note to database
+        if (!finalPdfUrl || !finalThumbnailUrl) {
+            return res.status(400).json({ message: "Missing files or URLs", success: false });
+        }
+
         const newNote = new Notes({
             title,
             description,
             price,
             totalPages,
             subject: processedSubject,
-            url: pdfUploadResult.url,
-            fileKey: pdfUploadResult.key,
-            thumbnail: thumbnailUploadResult.url,
-            thumbnailKey: thumbnailUploadResult.key
+            url: finalPdfUrl,
+            fileKey: finalPdfKey,
+            thumbnail: finalThumbnailUrl,
+            thumbnailKey: finalThumbnailKey
         });
 
         await newNote.save();
-
-        res.status(201).json({
-            message: "Note uploaded successfully",
-            success: true,
-            note: newNote
-        });
+        res.status(201).json({ message: "Note published successfully", success: true, note: newNote });
 
     } catch (error) {
         console.error("Upload Note Error:", error.message);

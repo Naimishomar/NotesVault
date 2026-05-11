@@ -15,6 +15,7 @@ import {
     Check
 } from 'lucide-react';
 import api from '../api/axios';
+import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import imageCompression from 'browser-image-compression';
@@ -76,8 +77,8 @@ const UploadNote = () => {
             if (!thumbnail) return toast.error("Please upload a thumbnail image");
         }
 
-        if (file && file.size > 50 * 1024 * 1024) {
-            return toast.error("PDF is too large (Max 50MB)");
+        if (file && file.size > 100 * 1024 * 1024) {
+            return toast.error("PDF is too large (Max 100MB)");
         }
 
         if (!formData.subject || formData.subject.length === 0) {
@@ -90,10 +91,10 @@ const UploadNote = () => {
         try {
             let optimizedThumbnail = thumbnail;
             
-            // Compress Thumbnail if it exists
+            // 1. Compress Thumbnail
             if (thumbnail) {
                 const options = {
-                    maxSizeMB: 0.1, // Compress to 100KB
+                    maxSizeMB: 0.1,
                     maxWidthOrHeight: 800,
                     useWebWorker: true,
                     fileType: 'image/jpeg'
@@ -101,37 +102,66 @@ const UploadNote = () => {
                 optimizedThumbnail = await imageCompression(thumbnail, options);
             }
 
-            const data = new FormData();
-            data.append('title', formData.title);
-            data.append('description', formData.description);
-            data.append('price', formData.price);
-            data.append('totalPages', formData.totalPages);
-            
-            const subjects = Array.isArray(formData.subject) ? formData.subject : [formData.subject];
-            subjects.forEach(s => data.append('subject', s));
-            
-            if (file) data.append('pdf', file);
-            if (optimizedThumbnail) data.append('thumbnail', optimizedThumbnail);
+            // 2. Get Presigned URLs for Direct Upload
+            let pdfData = { url: '', key: '', publicUrl: '' };
+            let thumbData = { url: '', key: '', publicUrl: '' };
+
+            if (file) {
+                const res = await api.post('/notes/generate-presigned-url', { 
+                    fileName: file.name, 
+                    fileType: file.type 
+                });
+                pdfData = { url: res.data.uploadUrl, key: res.data.fileKey, publicUrl: res.data.fileUrl };
+            }
+
+            if (optimizedThumbnail) {
+                const res = await api.post('/notes/generate-presigned-url', { 
+                    fileName: optimizedThumbnail.name, 
+                    fileType: optimizedThumbnail.type 
+                });
+                thumbData = { url: res.data.uploadUrl, key: res.data.fileKey, publicUrl: res.data.fileUrl };
+            }
+
+            // 3. Direct Upload to R2 (The Speed Boost)
+            if (file && pdfData.url) {
+                await axios.put(pdfData.url, file, {
+                    headers: { 'Content-Type': file.type },
+                    onUploadProgress: (progressEvent) => {
+                        if (progressEvent.total) {
+                            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            setUploadProgress(percent);
+                        }
+                    }
+                });
+            }
+
+            if (optimizedThumbnail && thumbData.url) {
+                await axios.put(thumbData.url, optimizedThumbnail, {
+                    headers: { 'Content-Type': optimizedThumbnail.type }
+                });
+            }
+
+            // 4. Save metadata to Backend
+            const payload = {
+                ...formData,
+                pdfUrl: pdfData.publicUrl,
+                pdfKey: pdfData.key,
+                thumbnailUrl: thumbData.publicUrl,
+                thumbnailKey: thumbData.key
+            };
 
             const url = editMode ? `/notes/update/${existingNote._id}` : '/notes/upload';
             const method = editMode ? 'put' : 'post';
             
-            const res = await api[method](url, data, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-                onUploadProgress: (progressEvent) => {
-                    if (progressEvent.total) {
-                        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                        setUploadProgress(percent);
-                    }
-                }
-            });
+            const res = await api[method](url, payload);
 
             if (res.data.success) {
-                toast.success(editMode ? "Note updated successfully!" : "Note uploaded successfully!");
+                toast.success(editMode ? "Note updated successfully!" : "Note published successfully!");
                 navigate('/admin');
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Operation failed");
+            console.error("Upload Error:", error);
+            toast.error(error.response?.data?.message || "Upload failed. Check your connection.");
         } finally {
             setLoading(false);
             setUploadProgress(0);
