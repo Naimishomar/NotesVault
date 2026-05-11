@@ -63,8 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setToken(data.accessToken);
                     await fetchProfile();
                 }
-            } catch (error) {
-                console.log("No valid session found during silent refresh");
+            } catch (error: any) {
+                console.error("Silent Refresh Failed:", error.message);
                 localStorage.removeItem('token');
                 setToken(null);
                 setUser(null);

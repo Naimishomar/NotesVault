@@ -8,7 +8,7 @@ import { sendOTPEmail } from "../utils/nodemailer.js";
 import { uploadToR2, deleteFromR2 } from "../utils/r2.js";
 
 const generateTokens = (userId) => {
-    const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "24h" });
     const refreshToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "30d" });
     return { accessToken, refreshToken };
 };
