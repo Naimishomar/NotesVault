@@ -181,15 +181,21 @@ export const updateProfile = async (req, res) => {
         if (name) updateData.name = name;
 
         if (file) {
+            console.log("Attempting R2 upload for profile image...");
             const uploadResult = await uploadToR2(file);
             if (uploadResult.success) {
                 updateData.profileImage = uploadResult.url;
                 
-                // Optional: Delete old image if it exists
                 if (user.profileImage) {
                     const oldKey = user.profileImage.split('/').pop();
                     await deleteFromR2(oldKey);
                 }
+            } else {
+                console.error("R2 Upload Failed:", uploadResult.error);
+                return res.status(400).json({ 
+                    message: "Image upload failed: " + uploadResult.error, 
+                    success: false 
+                });
             }
         }
 
