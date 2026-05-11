@@ -24,13 +24,21 @@ const Marketplace = () => {
         fetchNotes();
     }, []);
 
-    const categories = ["All", ...new Set(notes.map(n => n.subject))].filter(Boolean);
+    const categories = [
+        "All", "JEE", "NEET", "Btech", "Mtech", "MBBS", 
+        "Class 10", "Class 12", "CUET", "UPSC", 
+        "GATE", "CAT", "LAW", "Commerce", "Arts", "Science", "Other"
+    ];
 
-    const filteredNotes = notes.filter(note => 
-        (note.title.toLowerCase().includes(search.toLowerCase()) || 
-         note.subject?.toLowerCase().includes(search.toLowerCase())) && 
-        (category === "All" || note.subject === category)
-    );
+    const filteredNotes = notes.filter(note => {
+        const matchesSearch = note.title.toLowerCase().includes(search.toLowerCase()) || 
+                             (Array.isArray(note.subject) ? note.subject.some((s: string) => s.toLowerCase().includes(search.toLowerCase())) : note.subject?.toLowerCase().includes(search.toLowerCase()));
+        
+        const noteSubjects = Array.isArray(note.subject) ? note.subject : [note.subject];
+        const matchesCategory = category === "All" || noteSubjects.includes(category);
+        
+        return matchesSearch && matchesCategory;
+    });
 
     return (
         <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
@@ -103,11 +111,13 @@ const Marketplace = () => {
                                         </div>
 
                                         <div className="px-2">
-                                            <div className="flex items-center gap-2 mb-4">
+                                            <div className="flex flex-wrap gap-2 mb-4">
                                                 <div className="w-6 h-6 bg-slate-900 rounded-full flex items-center justify-center text-[8px] font-bold text-white">N</div>
-                                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.2em] bg-indigo-50 px-2.5 py-1 rounded-full">
-                                                    {note.subject}
-                                                </span>
+                                                {(Array.isArray(note.subject) ? note.subject : [note.subject]).slice(0, 3).map((s: string) => (
+                                                    <span key={s} className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2.5 py-1 rounded-full">
+                                                        {s}
+                                                    </span>
+                                                ))}
                                             </div>
                                             <h3 className="font-bold text-xl mb-2 line-clamp-1 group-hover:text-indigo-600 transition-colors leading-tight">{note.title}</h3>
                                             <p className="text-slate-400 text-sm mb-6 line-clamp-2 font-medium leading-relaxed">{note.description}</p>

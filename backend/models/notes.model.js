@@ -14,7 +14,7 @@ const NotesSchema = new mongoose.Schema({
         required: true,
     },
     subject:{
-        type: String,
+        type: [String],
         required: true,
     },
     url:{
