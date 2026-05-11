@@ -48,7 +48,7 @@ const LandingPage = () => {
                                 Your Daily Ritual <br />
                                 <span className="text-slate-400">Perfectly Crafted</span>
                             </h1>
-                            <p className="text-slate-500 text-[10px] font-medium leading-relaxed mt-4 max-w-[320px] uppercase tracking-wider mx-auto md:mx-0">
+                            <p className="text-slate-500 text-[10px] font-medium leading-relaxed mt-4 max-w-[320px] uppercase tracking-wider mx-auto md:mx-0 text-center md:text-left">
                                 Elevating academic excellence through precision-crafted knowledge exchanges. Every note is a blueprint for your future success.
                             </p>
                         </motion.div>
@@ -63,7 +63,7 @@ const LandingPage = () => {
                                 The Future of <br />
                                 <span className="text-slate-900">Knowledge Exchange</span>
                             </h2>
-                            <p className="text-slate-500 text-[10px] font-medium leading-relaxed mt-4 max-w-[320px] uppercase tracking-wider md:ml-auto">
+                            <p className="text-slate-500 text-[10px] font-medium leading-relaxed mt-4 max-w-[320px] uppercase tracking-wider mx-auto md:ml-auto text-center md:text-right">
                                 A global ecosystem of shared insights. Join a community of dedicated scholars trading high-fidelity resources in real-time.
                             </p>
                         </motion.div>
