@@ -1,5 +1,6 @@
 import Notes from "../models/notes.model.js";
-import { uploadToR2, deleteFromR2, generatePresignedUrl } from "../utils/r2.js";
+import Purchase from "../models/purchase.model.js";
+import { uploadToR2, deleteFromR2, generatePresignedUrl, generatePresignedGetUrl } from "../utils/r2.js";
 
 export const generatePresignedUrlController = async (req, res) => {
     try {
@@ -25,6 +26,42 @@ export const generatePresignedUrlController = async (req, res) => {
         });
     } catch (error) {
         console.error("Presigned URL Controller Error:", error.message);
+        res.status(500).json({ message: "Internal server error", success: false });
+    }
+};
+
+export const getNoteDownloadUrl = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+        const isAdmin = req.user.isAdmin;
+
+        const note = await Notes.findById(id);
+        if (!note) {
+            return res.status(404).json({ message: "Note not found", success: false });
+        }
+
+        // Security Check: Admin or Purchased
+        if (!isAdmin) {
+            const purchase = await Purchase.findOne({ user: userId, note: id, status: "completed" });
+            if (!purchase) {
+                return res.status(403).json({ message: "Access denied. Please purchase this note to view/download.", success: false });
+            }
+        }
+
+        // Generate high-security temporary URL
+        const result = await generatePresignedGetUrl(note.fileKey);
+        if (!result.success) {
+            return res.status(500).json({ message: "Failed to generate secure download link", success: false });
+        }
+
+        res.status(200).json({
+            success: true,
+            downloadUrl: result.url
+        });
+
+    } catch (error) {
+        console.error("Get Download URL Error:", error.message);
         res.status(500).json({ message: "Internal server error", success: false });
     }
 };
@@ -183,7 +220,8 @@ export const deleteNote = async (req, res) => {
 
 export const getAllNotes = async (req, res) => {
     try {
-        const notes = await Notes.find().sort({ createdAt: -1 });
+        // SECURITY: Exclude URL and fileKey from public listings
+        const notes = await Notes.find().select("-url -fileKey").sort({ createdAt: -1 });
         res.status(200).json({ success: true, notes });
     } catch (error) {
         console.error("Get All Notes Error:", error.message);

@@ -94,6 +94,22 @@ const NoteDetailPage = () => {
         }
     };
 
+    const [downloading, setDownloading] = useState(false);
+
+    const handleDownload = async () => {
+        setDownloading(true);
+        try {
+            const { data } = await api.get(`/notes/download/${note._id}`);
+            if (data.success && data.downloadUrl) {
+                window.open(data.downloadUrl, '_blank');
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to generate download link");
+        } finally {
+            setDownloading(false);
+        }
+    };
+
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center">
             <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
@@ -174,10 +190,12 @@ const NoteDetailPage = () => {
 
                             {isPurchased ? (
                                 <button 
+                                    disabled={downloading}
                                     className="w-full btn-primary py-5 flex items-center justify-center gap-3"
-                                    onClick={() => window.open(note.url, '_blank')}
+                                    onClick={handleDownload}
                                 >
-                                    <Download className="w-6 h-6" /> Download Now
+                                    {downloading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Download className="w-6 h-6" />}
+                                    {downloading ? 'Generating Secure Link...' : 'Download Now'}
                                 </button>
                             ) : (
                                 <button 

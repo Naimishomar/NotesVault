@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 
@@ -26,6 +26,22 @@ export const generatePresignedUrl = async (fileName, fileType) => {
         return { success: true, url, key: fileName };
     } catch (error) {
         console.error("Presigned URL Error:", error);
+        return { success: false, error: error.message };
+    }
+};
+
+export const generatePresignedGetUrl = async (key) => {
+    const params = {
+        Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME,
+        Key: key,
+    };
+
+    try {
+        const command = new GetObjectCommand(params);
+        const url = await getSignedUrl(r2, command, { expiresIn: 900 }); // 15 minutes
+        return { success: true, url };
+    } catch (error) {
+        console.error("Presigned GET URL Error:", error);
         return { success: false, error: error.message };
     }
 };

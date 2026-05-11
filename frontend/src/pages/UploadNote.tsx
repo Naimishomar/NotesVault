@@ -19,9 +19,15 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import imageCompression from 'browser-image-compression';
+import { PDFDocument } from 'pdf-lib';
+import * as pdfjs from 'pdfjs-dist';
+
+// Configure PDF.js Worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const UploadNote = () => {
     const [loading, setLoading] = useState(false);
+    const [compressionStatus, setCompressionStatus] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [file, setFile] = useState<File | null>(null);
     const [thumbnail, setThumbnail] = useState<File | null>(null);
@@ -37,6 +43,53 @@ const UploadNote = () => {
         totalPages: '',
         subject: [] as string[]
     });
+
+    const compressPDFFile = async (originalFile: File): Promise<File> => {
+        try {
+            setCompressionStatus(true);
+            const arrayBuffer = await originalFile.arrayBuffer();
+            const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+            const newPdfDoc = await PDFDocument.create();
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 1.2 }); // Downgrade resolution
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                if (!context) continue;
+
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({ 
+                    canvasContext: context, 
+                    viewport,
+                    canvas: canvas
+                }).promise;
+                
+                // Aggressive compression to JPEG
+                const imageData = canvas.toDataURL('image/jpeg', 0.4); 
+                const imageBytes = await fetch(imageData).then(res => res.arrayBuffer());
+                const jpgImage = await newPdfDoc.embedJpg(imageBytes);
+                
+                const newPage = newPdfDoc.addPage([viewport.width, viewport.height]);
+                newPage.drawImage(jpgImage, {
+                    x: 0,
+                    y: 0,
+                    width: viewport.width,
+                    height: viewport.height,
+                });
+            }
+
+            const pdfBytes = await newPdfDoc.save();
+            setCompressionStatus(false);
+            return new File([pdfBytes as any], originalFile.name, { type: 'application/pdf' });
+        } catch (error) {
+            console.error("Compression failed:", error);
+            setCompressionStatus(false);
+            return originalFile; // Fallback to original
+        }
+    };
 
     useEffect(() => {
         if (editMode && existingNote) {
@@ -89,9 +142,15 @@ const UploadNote = () => {
         setUploadProgress(0);
 
         try {
+            let optimizedFile = file;
             let optimizedThumbnail = thumbnail;
+
+            // 1. Aggressive PDF Compression (The Nuclear Option for Speed)
+            if (file && file.size > 5 * 1024 * 1024) {
+                optimizedFile = await compressPDFFile(file);
+            }
             
-            // 1. Compress Thumbnail
+            // 2. Compress Thumbnail
             if (thumbnail) {
                 const options = {
                     maxSizeMB: 0.1,
@@ -102,14 +161,14 @@ const UploadNote = () => {
                 optimizedThumbnail = await imageCompression(thumbnail, options);
             }
 
-            // 2. Get Presigned URLs for Direct Upload
+            // 3. Get Presigned URLs for Direct Upload
             let pdfData = { url: '', key: '', publicUrl: '' };
             let thumbData = { url: '', key: '', publicUrl: '' };
 
-            if (file) {
+            if (optimizedFile) {
                 const res = await api.post('/notes/generate-presigned-url', { 
-                    fileName: file.name, 
-                    fileType: file.type 
+                    fileName: optimizedFile.name, 
+                    fileType: optimizedFile.type 
                 });
                 pdfData = { url: res.data.uploadUrl, key: res.data.fileKey, publicUrl: res.data.fileUrl };
             }
@@ -122,10 +181,10 @@ const UploadNote = () => {
                 thumbData = { url: res.data.uploadUrl, key: res.data.fileKey, publicUrl: res.data.fileUrl };
             }
 
-            // 3. Direct Upload to R2 (The Speed Boost)
-            if (file && pdfData.url) {
-                await axios.put(pdfData.url, file, {
-                    headers: { 'Content-Type': file.type },
+            // 3. Direct Upload to R2 (Only if we got signed URLs)
+            if (optimizedFile && pdfData.url) {
+                await axios.put(pdfData.url, optimizedFile, {
+                    headers: { 'Content-Type': optimizedFile.type },
                     onUploadProgress: (progressEvent) => {
                         if (progressEvent.total) {
                             const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -141,13 +200,13 @@ const UploadNote = () => {
                 });
             }
 
-            // 4. Save metadata to Backend
+            // 4. Save metadata to Backend (Merge new and old values)
             const payload = {
                 ...formData,
-                pdfUrl: pdfData.publicUrl,
-                pdfKey: pdfData.key,
-                thumbnailUrl: thumbData.publicUrl,
-                thumbnailKey: thumbData.key
+                pdfUrl: pdfData.publicUrl || existingNote?.url,
+                pdfKey: pdfData.key || existingNote?.fileKey,
+                thumbnailUrl: thumbData.publicUrl || existingNote?.thumbnail,
+                thumbnailKey: thumbData.key || existingNote?.thumbnailKey
             };
 
             const url = editMode ? `/notes/update/${existingNote._id}` : '/notes/upload';
@@ -160,8 +219,12 @@ const UploadNote = () => {
                 navigate('/admin');
             }
         } catch (error: any) {
-            console.error("Upload Error:", error);
-            toast.error(error.response?.data?.message || "Upload failed. Check your connection.");
+            console.error("Detailed Upload Error:", error);
+            if (error.code === 'ERR_NETWORK') {
+                toast.error("Network Error: Please ensure Cloudflare R2 CORS is configured to allow this domain.");
+            } else {
+                toast.error(error.response?.data?.message || "Upload failed. Check your connection.");
+            }
         } finally {
             setLoading(false);
             setUploadProgress(0);
@@ -381,14 +444,18 @@ const UploadNote = () => {
                                 <>
                                     <div className="flex items-center gap-3 z-10">
                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                        <span>Uploading... {uploadProgress}%</span>
+                                        <span>
+                                            {compressionStatus ? 'Optimizing Quality...' : `Uploading... ${uploadProgress}%`}
+                                        </span>
                                     </div>
                                     {/* Progress Background Overlay */}
-                                    <motion.div 
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${uploadProgress}%` }}
-                                        className="absolute inset-y-0 left-0 bg-white/10 z-0"
-                                    />
+                                    {!compressionStatus && (
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${uploadProgress}%` }}
+                                            className="absolute inset-y-0 left-0 bg-white/10 z-0"
+                                        />
+                                    )}
                                 </>
                             ) : (
                                 <div className="flex items-center gap-2">
