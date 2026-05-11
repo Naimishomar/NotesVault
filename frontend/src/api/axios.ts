@@ -31,7 +31,7 @@ api.interceptors.response.use(
                 }
             } catch (refreshError) {
                 localStorage.removeItem('token');
-                window.location.href = '/auth';
+                // Silent failure - let the UI/AuthContext handle the redirect if needed
             }
         }
         return Promise.reject(error);

@@ -33,22 +33,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const { data } = await api.get('/auth/profile');
             if (data.success) {
                 setUser(data.user);
+                return true;
             }
+            return false;
         } catch (error) {
             console.error("Profile fetch error:", error);
-            logout();
-        } finally {
-            setLoading(false);
+            return false;
         }
     };
 
     useEffect(() => {
-        if (token) {
-            fetchProfile();
-        } else {
-            setLoading(false);
-        }
-    }, [token]);
+        const initializeAuth = async () => {
+            const currentToken = localStorage.getItem('token');
+            
+            if (currentToken) {
+                // Try to use existing token
+                const success = await fetchProfile();
+                if (success) {
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            // Silent Refresh: Try to get a new token from the refresh cookie
+            try {
+                const { data } = await api.post('/auth/refresh-token');
+                if (data.success && data.accessToken) {
+                    localStorage.setItem('token', data.accessToken);
+                    setToken(data.accessToken);
+                    await fetchProfile();
+                }
+            } catch (error) {
+                console.log("No valid session found during silent refresh");
+                localStorage.removeItem('token');
+                setToken(null);
+                setUser(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initializeAuth();
+    }, []);
 
     const login = async (newToken: string) => {
         localStorage.setItem('token', newToken);
