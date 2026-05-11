@@ -17,9 +17,11 @@ import {
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
+import imageCompression from 'browser-image-compression';
 
 const UploadNote = () => {
     const [loading, setLoading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [file, setFile] = useState<File | null>(null);
     const [thumbnail, setThumbnail] = useState<File | null>(null);
     const location = useLocation();
@@ -68,10 +70,14 @@ const UploadNote = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Validation: Files are only required in create mode
+        // Validation
         if (!editMode) {
             if (!file) return toast.error("Please select a PDF file");
             if (!thumbnail) return toast.error("Please upload a thumbnail image");
+        }
+
+        if (file && file.size > 50 * 1024 * 1024) {
+            return toast.error("PDF is too large (Max 50MB)");
         }
 
         if (!formData.subject || formData.subject.length === 0) {
@@ -79,25 +85,45 @@ const UploadNote = () => {
         }
 
         setLoading(true);
-        const data = new FormData();
-        data.append('title', formData.title);
-        data.append('description', formData.description);
-        data.append('price', formData.price);
-        data.append('totalPages', formData.totalPages);
-        
-        // Append multiple categories
-        const subjects = Array.isArray(formData.subject) ? formData.subject : [formData.subject];
-        subjects.forEach(s => data.append('subject', s));
-        
-        if (file) data.append('pdf', file);
-        if (thumbnail) data.append('thumbnail', thumbnail);
+        setUploadProgress(0);
 
         try {
+            let optimizedThumbnail = thumbnail;
+            
+            // Compress Thumbnail if it exists
+            if (thumbnail) {
+                const options = {
+                    maxSizeMB: 0.1, // Compress to 100KB
+                    maxWidthOrHeight: 800,
+                    useWebWorker: true,
+                    fileType: 'image/jpeg'
+                };
+                optimizedThumbnail = await imageCompression(thumbnail, options);
+            }
+
+            const data = new FormData();
+            data.append('title', formData.title);
+            data.append('description', formData.description);
+            data.append('price', formData.price);
+            data.append('totalPages', formData.totalPages);
+            
+            const subjects = Array.isArray(formData.subject) ? formData.subject : [formData.subject];
+            subjects.forEach(s => data.append('subject', s));
+            
+            if (file) data.append('pdf', file);
+            if (optimizedThumbnail) data.append('thumbnail', optimizedThumbnail);
+
             const url = editMode ? `/notes/update/${existingNote._id}` : '/notes/upload';
             const method = editMode ? 'put' : 'post';
             
             const res = await api[method](url, data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' },
+                onUploadProgress: (progressEvent) => {
+                    if (progressEvent.total) {
+                        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        setUploadProgress(percent);
+                    }
+                }
             });
 
             if (res.data.success) {
@@ -108,6 +134,7 @@ const UploadNote = () => {
             toast.error(error.response?.data?.message || "Operation failed");
         } finally {
             setLoading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -315,19 +342,38 @@ const UploadNote = () => {
                         </div>
                     </div>
 
-                    <button 
-                        disabled={loading}
-                        className={`w-full py-4 flex items-center justify-center gap-2 mt-8 rounded-2xl font-bold transition-all active:scale-[0.98] ${editMode ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200' : 'btn-primary'}`}
-                    >
-                        {loading ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                            <>
-                                {editMode ? 'Save Changes' : 'Upload & Publish'} 
-                                {editMode ? <CheckCircle2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
-                            </>
+                    <div className="space-y-4">
+                        <button 
+                            disabled={loading}
+                            className={`w-full py-4 flex flex-col items-center justify-center gap-2 mt-8 rounded-2xl font-bold transition-all active:scale-[0.98] relative overflow-hidden ${editMode ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200' : 'bg-black text-white hover:bg-slate-800 shadow-xl shadow-black/10'}`}
+                        >
+                            {loading ? (
+                                <>
+                                    <div className="flex items-center gap-3 z-10">
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>Uploading... {uploadProgress}%</span>
+                                    </div>
+                                    {/* Progress Background Overlay */}
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${uploadProgress}%` }}
+                                        className="absolute inset-y-0 left-0 bg-white/10 z-0"
+                                    />
+                                </>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    {editMode ? 'Save Changes' : 'Upload & Publish'} 
+                                    {editMode ? <CheckCircle2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+                                </div>
+                            )}
+                        </button>
+                        
+                        {loading && (
+                            <p className="text-[10px] font-bold text-center text-slate-400 uppercase tracking-widest animate-pulse">
+                                Optimization in progress. Please do not close the window.
+                            </p>
                         )}
-                    </button>
+                    </div>
                 </form>
             </motion.div>
         </div>

@@ -3,9 +3,16 @@ import { uploadToR2, deleteFromR2 } from "../utils/r2.js";
 
 export const uploadNote = async (req, res) => {
     try {
+        console.log("Upload Request Body:", req.body);
         const { title, description, price, totalPages, subject } = req.body;
         const pdfFile = req.files?.pdf?.[0];
         const thumbnailFile = req.files?.thumbnail?.[0];
+
+        // Process subject to ensure it's an array
+        let processedSubject = subject;
+        if (typeof subject === 'string') {
+            processedSubject = [subject];
+        }
 
         if (!pdfFile) {
             return res.status(400).json({ message: "Please upload a PDF file", success: false });
@@ -15,7 +22,7 @@ export const uploadNote = async (req, res) => {
             return res.status(400).json({ message: "Please upload a thumbnail image", success: false });
         }
 
-        if (!title || !description || !price || !totalPages || !subject) {
+        if (!title || !description || !price || !totalPages || !processedSubject || processedSubject.length === 0) {
             return res.status(400).json({ message: "Please provide all details (title, description, price, totalPages, subject)", success: false });
         }
 
@@ -39,7 +46,7 @@ export const uploadNote = async (req, res) => {
             description,
             price,
             totalPages,
-            subject,
+            subject: processedSubject,
             url: pdfUploadResult.url,
             fileKey: pdfUploadResult.key,
             thumbnail: thumbnailUploadResult.url,
@@ -76,7 +83,14 @@ export const updateNote = async (req, res) => {
         if (description) note.description = description;
         if (price) note.price = price;
         if (totalPages) note.totalPages = totalPages;
-        if (subject) note.subject = subject;
+        
+        if (subject) {
+            let processedSubject = subject;
+            if (typeof subject === 'string') {
+                processedSubject = [subject];
+            }
+            note.subject = processedSubject;
+        }
 
         if (pdfFile) {
             // Delete old file from R2
