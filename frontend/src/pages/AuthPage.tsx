@@ -46,7 +46,7 @@ const AuthPage = () => {
             
             if (data.success) {
                 toast.success(isLogin ? "Login successful!" : "Account created!");
-                login(data.accessToken);
+                await login(data.accessToken);
                 navigate('/dashboard');
             }
         } catch (error: any) {

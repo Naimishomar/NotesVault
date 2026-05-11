@@ -79,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async (newToken: string) => {
         localStorage.setItem('token', newToken);
         setToken(newToken);
+        await fetchProfile();
     };
 
     const logout = () => {

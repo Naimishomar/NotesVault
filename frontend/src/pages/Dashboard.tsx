@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -13,10 +14,27 @@ import {
     Shield,
     LogOut
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
+import api from '../api/axios';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
     const { user, logout, loading } = useAuth();
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+    const handleDownload = async (noteId: string) => {
+        setDownloadingId(noteId);
+        try {
+            const { data } = await api.get(`/notes/download/${noteId}`);
+            if (data.success && data.downloadUrl) {
+                window.open(data.downloadUrl, '_blank');
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to generate download link");
+        } finally {
+            setDownloadingId(null);
+        }
+    };
 
     if (loading) {
         return (
@@ -32,14 +50,7 @@ const Dashboard = () => {
     }
 
     if (!user) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#FDFDFD] px-6 text-center">
-                <Shield className="w-16 h-16 text-red-100 mb-6" />
-                <h2 className="text-2xl font-bold mb-2">Session Error</h2>
-                <p className="text-slate-500 max-w-xs mb-8">We couldn't verify your session. This is likely due to a temporary server connection issue.</p>
-                <button onClick={() => window.location.reload()} className="btn-primary">Retry Connection</button>
-            </div>
-        );
+        return <Navigate to="/auth" />;
     }
 
     const stats = [
@@ -157,10 +168,16 @@ const Dashboard = () => {
                                         </div>
                                         <h4 className="font-bold text-base md:text-lg text-slate-800 mb-2 md:mb-4 truncate">{purchase.note?.title}</h4>
                                         <button 
-                                            onClick={() => window.open(purchase.note?.url, '_blank')}
+                                            disabled={downloadingId === purchase.note?._id}
+                                            onClick={() => handleDownload(purchase.note?._id)}
                                             className="flex items-center gap-2 text-xs md:text-sm font-bold text-black hover:translate-x-1 transition-transform cursor-pointer"
                                         >
-                                            <Download className="w-3 h-3 md:w-4 md:h-4" /> Download Note
+                                            {downloadingId === purchase.note?._id ? (
+                                                <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
+                                            ) : (
+                                                <Download className="w-3 h-3 md:w-4 md:h-4" />
+                                            )}
+                                            {downloadingId === purchase.note?._id ? 'Securing...' : 'Download Note'}
                                         </button>
                                     </div>
                                 </motion.div>
