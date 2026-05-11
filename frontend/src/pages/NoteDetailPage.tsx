@@ -101,7 +101,13 @@ const NoteDetailPage = () => {
         try {
             const { data } = await api.get(`/notes/download/${note._id}`);
             if (data.success && data.downloadUrl) {
-                window.open(data.downloadUrl, '_blank');
+                const link = document.createElement('a');
+                link.href = data.downloadUrl;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to generate download link");
